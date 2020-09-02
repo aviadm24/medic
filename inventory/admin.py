@@ -12,6 +12,7 @@ from inventory.models import Item, Category, Unit, Vendor, PTAO, Order, OrderIte
 admin.site.unregister(Group)
 admin.site.unregister(User)
 
+
 def make_cat_dict():
     formations_queryset = Formation.objects.all()
     categorical_doses = Categorical_dose.objects.all()
