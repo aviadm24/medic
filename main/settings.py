@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 # found in github
 # https://github.com/melizalab/django-lab-inventory
 from pathlib import Path
+import os
+import socket
+import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
@@ -26,7 +30,7 @@ SECRET_KEY = 'cebcs!k-p=n!(er1)150^_@+1djswqwfpku&1u_w5!2+23#3wt'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['medicstore.herokuapp.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -34,8 +38,8 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'django.contrib.auth',
     'inventory',
+    'django_extensions',
     'django.contrib.admin',
-
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -74,15 +79,19 @@ WSGI_APPLICATION = 'main.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+ipaddress = socket.gethostbyname(socket.gethostname())
+print('ip_address:', ipaddress)
+if not ipaddress.startswith('172'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
-
+else:
+    DATABASES = {}
+    DATABASES['default'] = dj_database_url.config()
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -120,4 +129,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+# this is exactly what heroku recommends execpt changing staticfiles dirs to static not staticfiles!
+# print('project root: ', BASE_DIR)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# print('STATIC_ROOT: ', STATIC_ROOT)
 STATIC_URL = '/static/'
+if ipaddress.startswith('172'):
+    STATICFILES_DIRS = (
+        os.path.join(BASE_DIR, 'static'),
+    )
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
