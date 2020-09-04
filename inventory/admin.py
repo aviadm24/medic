@@ -5,7 +5,7 @@ from django.core.files.storage import FileSystemStorage
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.contrib.auth.models import Group, User
-
+import pandas as pd
 from inventory.models import Item, Category, Unit, Vendor, PTAO, Order, OrderItem,\
     Formation, Categorical_dose, Dose, Type, Company, Manufacturer, Manufacturing_country, Kind_name, Medication
 
@@ -46,23 +46,36 @@ def make_cat_dict():
 
 class ExportPdfMixin:
     def export_as_pdf(self, request, queryset):
-        form_dict = make_cat_dict()
-        html_string = render_to_string('test_template.html', {'form_dict': form_dict})
+        # form_dict = make_cat_dict()
+        # html_string = render_to_string('test_template.html', {'form_dict': form_dict})
+        #
+        # html = HTML(string=html_string)  # , base_url=request.build_absolute_uri()
+        # html.write_pdf(target='/tmp/mypdf.pdf')
+        # # html.write_png(target='/tmp/mypng.png')
+        #
+        # fs = FileSystemStorage('/tmp')
+        # with fs.open('mypdf.pdf') as pdf:
+        #     response = HttpResponse(pdf, content_type='application/pdf')
+        #     response['Content-Disposition'] = 'attachment; filename="mypdf.pdf"'
+        #     return response
 
-        html = HTML(string=html_string)  # , base_url=request.build_absolute_uri()
-        html.write_pdf(target='/tmp/mypdf.pdf')
-        # html.write_png(target='/tmp/mypng.png')
-
+        HTML('https://www.hamerkaha.co.il/menu-cannabis/?fbclid=IwAR1cyNigDS45zoBuOgZv89Vs4DLqcBbmHz0UgGi6ndF25h2tNlLPYi0no1U').write_pdf(target='/tmp/mypdf.pdf')
         fs = FileSystemStorage('/tmp')
         with fs.open('mypdf.pdf') as pdf:
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="mypdf.pdf"'
             return response
-
-
 class ExportCsvMixin:
     def export_as_csv(self, request, queryset):
-        form_dict = make_cat_dict()
+        # google this - pandas index not showing up in csv file when using to_csv
+        # form_dict = make_cat_dict()
+        # df = pd.DataFrame(data=form_dict)
+        # print(df)
+        # response = HttpResponse(content_type='text/csv')
+        # response['Content-Disposition'] = 'attachment; filename=test.csv'
+        # df.to_csv(response, index=False)
+        # return response
+
         meta = self.model._meta
         field_names = [field.name for field in meta.fields]
 
@@ -79,38 +92,65 @@ class ExportCsvMixin:
     export_as_csv.short_description = "Export Selected"
 
 
-class OrderItemInline(admin.StackedInline):
-    model = OrderItem
-    extra = 1
+class MedicBookPageMixin:
+    def export_page_num(self, request, queryset):
+        # google this - pandas index not showing up in csv file when using to_csv
+        # form_dict = make_cat_dict()
+        # df = pd.DataFrame(data=form_dict)
+        # print(df)
+        # response = HttpResponse(content_type='text/csv')
+        # response['Content-Disposition'] = 'attachment; filename=test.csv'
+        # df.to_csv(response, index=False)
+        # return response
+
+        meta = self.model._meta
+        field_names = ['pharma_code', 'page_num']
+
+        response = HttpResponse(content_type='text/xlsx')
+        response['Content-Disposition'] = 'attachment; filename={}.xlsx'.format(meta)
+        writer = csv.writer(response)
+
+        writer.writerow(field_names)
+        for obj in queryset:
+            row = writer.writerow([getattr(obj, field) for field in field_names])
+
+        return response
+
+    export_page_num.short_description = "Export Page_numbers"
 
 
-class ItemAdmin(admin.ModelAdmin):
-    date_hierarchy = 'date_added'
-
-    fieldsets = [
-        (None, {'fields': ['name', 'chem_formula', 'category']}),
-        ('Vendor Information', {'fields': ['vendor', 'catalog', 'manufacturer',
-                                           'manufacturer_number',
-                                           'size', 'unit',]}),
-        (None, {'fields': ['parent_item', 'comments']})
-    ]
-
-    list_display = ('name', 'category', 'date_added',)
-    list_filter = ('category', 'vendor', 'manufacturer', 'date_added')
-    search_fields = ('name', 'chem_formula', 'manufacturer_number', 'comments')
-    inlines = (OrderItemInline,)
-    # actions = ["export_as_csv"]
+# class OrderItemInline(admin.StackedInline):
+#     model = OrderItem
+#     extra = 1
+#
+#
+# class ItemAdmin(admin.ModelAdmin):
+#     date_hierarchy = 'date_added'
+#
+#     fieldsets = [
+#         (None, {'fields': ['name', 'chem_formula', 'category']}),
+#         ('Vendor Information', {'fields': ['vendor', 'catalog', 'manufacturer',
+#                                            'manufacturer_number',
+#                                            'size', 'unit',]}),
+#         (None, {'fields': ['parent_item', 'comments']})
+#     ]
+#
+#     list_display = ('name', 'category', 'date_added',)
+#     list_filter = ('category', 'vendor', 'manufacturer', 'date_added')
+#     search_fields = ('name', 'chem_formula', 'manufacturer_number', 'comments')
+#     inlines = (OrderItemInline,)
+#     # actions = ["export_as_csv"]
 
 
 # admin.site.register(Item, ItemAdmin)
 
 
-class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin):
+class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin, MedicBookPageMixin):
     date_hierarchy = 'date_added'
 
     list_filter = ('name', 'manufacturer', 'date_added')
     search_fields = ('name', 'manufacturer', 'comments')
-    actions = ["export_as_csv", "export_as_pdf"]
+    actions = ["export_as_csv", "export_as_pdf", "export_page_num"]
 
 
 admin.site.register(Medication, MedicineAdmin)
@@ -143,5 +183,7 @@ admin.site.register(Medication, MedicineAdmin)
 #
 # for model in (Category, Unit, Manufacturer, Vendor):
 #     admin.site.register(model)
+
+
 for model in (Formation, Categorical_dose, Dose, Type, Company, Manufacturer, Manufacturing_country, Kind_name):
     admin.site.register(model)

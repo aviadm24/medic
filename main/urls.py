@@ -22,3 +22,6 @@ urlpatterns = [
     path('', admin.site.urls),
     # path('', include('inventory.urls'))
 ]
+admin.site.site_header = "MedicStore Admin"
+admin.site.site_title = "MedicStore Admin Portal"
+admin.site.index_title = "Welcome to MedicStore Portal"
