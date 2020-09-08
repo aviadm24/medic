@@ -6,8 +6,11 @@ from docx import Document
 from docx.styles.style import WD_STYLE_TYPE
 #from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import RGBColor
-# from win32com import client
-import pythoncom
+try:
+    from win32com import client
+    import pythoncom
+except:
+    pass
 import threading
 #from queue import Queue
 import time
