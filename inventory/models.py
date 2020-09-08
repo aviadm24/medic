@@ -160,7 +160,7 @@ class Medication(models.Model):
     comments = models.TextField(blank=True)
 
     def __str__(self):
-        return self.pharma_code
+        return self.name
 
     def mfg_url(self):
         try:
