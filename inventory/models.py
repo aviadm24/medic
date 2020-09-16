@@ -125,19 +125,20 @@ class Kind_name(models.Model):
 
 
 class Medication(models.Model):
-    name = models.CharField(max_length=128, blank=True, null=True)
+    # name = models.CharField(max_length=128, blank=True, null=True)
     formation = models.ForeignKey('Formation', blank=True, null=True,
                                      on_delete=models.SET_NULL,
-                                     help_text="leave blank if unknown or same as vendor")
+                                     help_text="")
     categorical_dose = models.ForeignKey('Categorical_dose', blank=True, null=True,
                                      on_delete=models.SET_NULL,
-                                     help_text="leave blank if unknown or same as vendor")
-    dose = models.ForeignKey('Dose', blank=True, null=True,
-                                     on_delete=models.SET_NULL,
-                                     help_text="leave blank if unknown or same as vendor")
+                                     help_text="")
+    dose = models.CharField(max_length=45, blank=True, null=True)
+                                     # models.ForeignKey('Dose', blank=True, null=True,
+                                     # on_delete=models.SET_NULL,
+                                     # help_text="")
     m_type = models.ForeignKey('Type', blank=True, null=True,
                                      on_delete=models.SET_NULL,
-                                     help_text="leave blank if unknown or same as vendor")
+                                     help_text="")
     company = models.ForeignKey('Company', blank=True, null=True,
                                on_delete=models.SET_NULL,
                                help_text="")
@@ -147,20 +148,18 @@ class Medication(models.Model):
     manufacturing_country = models.ForeignKey('Manufacturing_country', blank=True, null=True,
                                 on_delete=models.SET_NULL,
                                 help_text="")
-    kind_name = models.ForeignKey('Kind_name', blank=True, null=True,
-                                on_delete=models.SET_NULL,
-                                help_text="")
+    kind_name = models.CharField(max_length=45, default="-")
     pharma_code = models.CharField(max_length=45, blank=True, null=True)
     page_num = models.CharField(max_length=45, blank=True, null=True)
     price = models.DecimalField('Price',
                                max_digits=10, decimal_places=2,
                                blank=True, null=True)
-    amount = models.IntegerField('Amount', blank=True, null=True)
+    amount = models.IntegerField('Amount', default=0)
     date_added = models.DateField(auto_now_add=True)
     comments = models.TextField(blank=True)
 
     def __str__(self):
-        return self.name
+        return self.kind_name
 
     def mfg_url(self):
         try:

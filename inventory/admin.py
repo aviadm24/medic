@@ -21,7 +21,7 @@ def make_cat_dict():
     formations_queryset = Formation.objects.all()
     categorical_doses = Categorical_dose.objects.all()
     types = Type.objects.all()
-    kind_names = Kind_name.objects.all()
+    # kind_names = Kind_name.objects.all()
     form_dict = {}
     for form in formations_queryset:
         print(form.name)
@@ -37,14 +37,12 @@ def make_cat_dict():
             for m_type in types:
                 type_query = category_query.filter(m_type=m_type)
                 print(type_query)
-                for kind in kind_names:
-                    kind_query = type_query.filter(kind_name=kind)
-                    for elem in kind_query:
-                        print("price: ", elem.price)
-                        # elem_list.append(str(m_type))
-                        # elem_list.append(str(kind))
-                        # elem_list.append(str(elem.price))
-                        type_list.append("{} - {} - {}".format(m_type.name, kind.name, elem.price))
+                for elem in type_query:
+                    print("price: ", elem.price)
+                    # elem_list.append(str(m_type))
+                    # elem_list.append(str(kind))
+                    # elem_list.append(str(elem.price))
+                    type_list.append("{} - {} - {}".format(m_type.name, elem.kind_name, elem.price))
             cat_dict[category.name] = type_list
         form_dict[form] = cat_dict
     return form_dict
@@ -110,11 +108,11 @@ class ExportPdfMixin:
             file_name = str(datetime.datetime.today().date())+'_'+str(key)
             file_name_list.append(file_name)
             makeToc(file_name=file_name, cat_dict=main_dict[key])
-        fs = FileSystemStorage('/temp')
-        with fs.open(file_name_list[0]) as pdf:
-            response = HttpResponse(pdf, content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="{}"'.format(file_name_list[0])
-            return response
+        # fs = FileSystemStorage('/temp')
+        # with fs.open(file_name_list[0]) as pdf:
+        #     response = HttpResponse(pdf, content_type='application/pdf')
+        #     response['Content-Disposition'] = 'attachment; filename="{}"'.format(file_name_list[0])
+        #     return response
 
         # https://stackoverflow.com/questions/42814732/how-to-return-multiple-files-in-httpresponse-django
         # def zipFiles(files):
@@ -161,8 +159,8 @@ class MedicBookPageMixin:
         meta = self.model._meta
         field_names = ['pharma_code', 'page_num']
 
-        response = HttpResponse(content_type='text/xlsx')
-        response['Content-Disposition'] = 'attachment; filename={}.xlsx'.format(meta)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
         writer = csv.writer(response)
 
         writer.writerow(field_names)
@@ -223,7 +221,7 @@ class MedicSumMixin:
 class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin, MedicBookPageMixin, MedicSumMixin):
     date_hierarchy = 'date_added'
 
-    list_filter = ('name', 'manufacturer', 'date_added', 'formation')
+    list_filter = ('kind_name', 'manufacturer', 'date_added', 'formation')
     search_fields = ('name', 'manufacturer', 'formation')
     actions = ["export_as_csv", "export_pdf", "export_page_num", "export_sum"]
 
@@ -260,5 +258,5 @@ admin.site.register(Medication, MedicineAdmin)
 #     admin.site.register(model)
 
 
-for model in (Formation, Categorical_dose, Dose, Type, Company, Manufacturer, Manufacturing_country, Kind_name):
+for model in (Formation, Categorical_dose, Type, Company, Manufacturer, Manufacturing_country):
     admin.site.register(model)
