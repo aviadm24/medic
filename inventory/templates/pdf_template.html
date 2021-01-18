@@ -35,6 +35,7 @@ section .section-title{
     position: relative;
 }
 #what-we-do .card .card-block a{
+	padding: 5px;
 	color: #007b5e !important;
 	font-weight:700;
 	text-decoration:none;
@@ -104,8 +105,24 @@ section .section-title{
 <!--							<p class="card-title">{{ elems.2 }} ש"ח:<span class="highlight">{{ elems.0 }} </span>{{ elems.1 }} - </p>-->
 							<h3 class="card-title">{{ form }}</h3>
 							{% for category, elems in cat_dict.items %}
-							<p class="card-text">{{ category }}</p>
-							<a href="https://www.fiverr.com/share/qb8D02" title="Read more" class="read-more" >{{ elems.2 }} ש"ח:<i class="fa fa-angle-double-right ml-2"></i><span class="highlight">{{ elems.0 }} </span>{{ elems.1 }} -</a>
+<!--							<p class="card-text">{{ category }}</p>-->
+							<table>
+								<thead>
+									<tr>
+										<th colspan="100%">{{ category }}</th>
+									</tr>
+								</thead>
+								<tbody>
+								<tr title="Read more" class="read-more">
+									<td><a><i class="fa fa-angle-double-right ml-2"></i></a></td>
+									<td><a>₪</a></td>
+									<td><a>{{ elems.price }}</a></td>
+									<td><a>{{ elems.type }}</a></td>
+									<td><a>{{ elems.kind }}</a></td>
+								</tr>
+								</tbody>
+							</table>
+<!--							<a href="" title="Read more" class="read-more" >  ש"ח:  {{ elems.price }}<i class="fa fa-angle-double-right ml-2"></i><span class="highlight"> {{ elems.type }} </span>{{ elems.kind }}</a>-->
 							{% endfor %}
 							</br>
 						</div>

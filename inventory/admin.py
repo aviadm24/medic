@@ -41,18 +41,23 @@ def make_cat_dict():
             elem_list = []
             print(category.name)
             category_query = formation_query.filter(categorical_dose=category)
-            print(category_query)
-            type_list = []
+            # print(category_query)
+            # type_list = []
+            type_dict = {}
             for m_type in types:
                 type_query = category_query.filter(m_type=m_type)
-                print(type_query)
+                # print(type_query)
                 for elem in type_query:
-                    print("price: ", elem.price)
-                    # elem_list.append(str(m_type))
-                    # elem_list.append(str(kind))
-                    # elem_list.append(str(elem.price))
-                    type_list.append("{} - {} - {}".format(m_type.name, elem.kind_name, elem.price))
-            cat_dict[category.name] = type_list
+                    # print("price: ", elem.price)
+                    # type_list.append({"type": m_type.name,
+                    #                   "kind": elem.kind_name,
+                    #                   "price": elem.price})
+                    type_dict = {"type": m_type.name,
+                                  "kind": elem.kind_name,
+                                  "price": elem.price}
+                    # type_list.append("{} - {} - {}".format(m_type.name, elem.kind_name, elem.price))
+            cat_dict[category.name] = type_dict
+            print(type_dict)
         form_dict[form] = cat_dict
     return form_dict
 
