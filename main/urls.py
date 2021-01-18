@@ -15,12 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from inventory import views
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', admin.site.urls),
-    # path('', include('inventory.urls'))
+    # path('admin/', admin.site.urls),
+    path('', admin.site.urls, name='admin'),
+    # path('', include('inventory.urls')),
+    path('excel_ajax_url/', views.excel, name="excel_ajax_url"),
+    path('test/', views.to_pdf, name="test")
 ]
 admin.site.site_header = "MedicStore Admin"
 admin.site.site_title = "MedicStore Admin Portal"

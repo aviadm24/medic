@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['medicstore.herokuapp.com', '127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.auth',
     'inventory',
     'import_export',

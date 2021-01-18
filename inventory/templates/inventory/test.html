@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+                      @page {
+                          size: a4;
+                          margin: 1cm;
+                      }
+
+                      @font-face {
+                          font-family: DejaVu;
+                          src: url(my_fonts_dir/DejaVuSans.ttf);
+                      }
+
+                      html {
+                          font-family: DejaVu;
+                          font-size: 11pt;
+                      }
+    </style>
+    <title>Django HTMLtoPDF Tutorial</title>
+</head>
+<body>
+    <h1>HTML To PDF</h1>
+    <h3><a href="{% url 'test' %}">שלום</a></h3>
+     <b>אני מנסה פה משהו
+
+
+         אחר
+</b>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.min.css">
+</head>
+<body>
+<h3><a href="/">back to admin</a></h3>
+<div>
+        Toggle column:
+    <a class="toggle-vis" data-column="0">amount</a> -
+    <a class="toggle-vis" data-column="1">categorical_dose</a> -
+    <a class="toggle-vis" data-column="2">comments</a> -
+    <a class="toggle-vis" data-column="3">company</a> -
+    <a class="toggle-vis" data-column="4">date_added</a> -
+    <a class="toggle-vis" data-column="5">dose</a>
+    <a class="toggle-vis" data-column="6">formation</a> -
+    <a class="toggle-vis" data-column="7">kind_name</a> -
+    <a class="toggle-vis" data-column="8">m_type</a> -
+    <a class="toggle-vis" data-column="9">manufacturer</a> -
+    <a class="toggle-vis" data-column="10">manufacturing_country</a> -
+    <a class="toggle-vis" data-column="11">page_num</a>
+    <a class="toggle-vis" data-column="12">pharma_code</a> -
+    <a class="toggle-vis" data-column="13">price</a>
+</div>
+<table cellpadding="0" cellspacing="0" border="0" id="example">
+     <thead>
+         <tr>
+             <th>amount</th>
+             <th>categorical_dose</th>
+             <th>comments</th>
+             <th>company</th>
+             <th>date_added</th>
+             <th>dose</th>
+             <th>formation</th>
+             <th>kind_name</th>
+             <th>m_type</th>
+             <th>manufacturer</th>
+             <th>manufacturing_country</th>
+             <th>page_num</th>
+             <th>pharma_code</th>
+             <th>price</th>
+             <th></th>
+         </tr>
+     </thead>
+     <tbody></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.5/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/plug-ins/1.10.22/api/sum().js"></script>
+<script>
+    $(document).ready(function() {
+    var table = $('#example').DataTable( {
+        "ajax": {
+                 "processing": true,
+                 "url": "{% url 'excel_ajax_url' %}",
+                 "complete": function ( msg ) {
+                    //console.log("ajax call");
+                  },
+<!--                  success: function(data){-->
+<!--                    console.log(data);-->
+<!--                  },-->
+                 "dataSrc": ""
+             },
+
+        "columns": [
+                 { "data": "amount" },
+                 { "data": "categorical_dose" },
+                 { "data": "comments" },
+                 { "data": "company" },
+                 { "data": "date_added" },
+                 { "data": "dose" },
+                 { "data": "formation" },
+                 { "data": "kind_name" },
+                 { "data": "m_type" },
+                 { "data": "manufacturer" },
+                 { "data": "manufacturing_country" },
+                 { "data": "page_num" },
+                 { "data": "pharma_code" },
+                 { "data": "price" },
+<!--                 { "data": "id" }-->
+             ],
+        dom: 'Bfrtip',
+        buttons: [ {
+            extend: 'excelHtml5',
+            exportOptions: {
+                columns: ':visible'
+            },
+            customize: function ( xlsx ){
+                var sheet = xlsx.xl.worksheets['sheet1.xml'];
+
+                // jQuery selector to add a border
+                $('row c[r*="10"]', sheet).attr( 's', '25' );
+            }
+        } ]
+        } );
+
+        $('a.toggle-vis').on( 'click', function (e) {
+            e.preventDefault();
+            // Get the column API object
+            var column = table.column( $(this).attr('data-column') );
+
+            // Toggle the visibility
+            column.visible( ! column.visible());
+        } );
+    } );
+</script>
+
+
+</body>
+</html>

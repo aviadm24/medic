@@ -11,9 +11,6 @@ try:
     import pythoncom
 except:
     pass
-import threading
-#from queue import Queue
-import time
 
 
 def convert_to_pdf(doc):
@@ -56,4 +53,3 @@ def makeToc(file_name, cat_dict):
     convert_to_pdf(path)
 
 
-# makeToc("test", )

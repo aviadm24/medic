@@ -4,15 +4,24 @@ import datetime
 import unicodecsv as csv
 from django.http import HttpResponse
 from django.contrib import admin
+from django.shortcuts import get_object_or_404, render, redirect
 from import_export.admin import ImportExportModelAdmin
 from django.core.files.storage import FileSystemStorage
 from django.template.loader import render_to_string
-#from weasyprint import HTML
+from django.core import serializers
+from weasyprint import HTML
 from django.contrib.auth.models import Group, User
 import pandas as pd
 from inventory.models import Item, Category, Unit, Vendor, PTAO, Order, OrderItem,\
     Formation, Categorical_dose, Dose, Type, Company, Manufacturer, Manufacturing_country, Kind_name, Medication
 from .make_pdf import *
+from xhtml2pdf import pisa
+from io import BytesIO #A stream implementation using an in-memory bytes buffer
+                       # It inherits BufferIOBase
+
+from django.http import HttpResponse
+from django.template.loader import get_template
+
 admin.site.unregister(Group)
 admin.site.unregister(User)
 
@@ -81,6 +90,18 @@ def sum_dict():
     return type_dict
 
 
+class ExportHTMLMixin:
+    def export_html(self, request, queryset):
+        form_dict = make_cat_dict()
+        return render(request, 'pdf_template.html', {'form_dict': form_dict})
+        # html_string = render_to_string('test_template.html', {'form_dict': form_dict})
+        #
+        # html = HTML(string=html_string)  # , base_url=request.build_absolute_uri()
+        # html.write_pdf(target='/tmp/mypdf.pdf')
+
+    export_html.short_description = 'דו"ח html'
+
+
 class ExportPdfMixin:
     def export_pdf(self, request, queryset):
         # form_dict = make_cat_dict()
@@ -129,6 +150,25 @@ class ExportPdfMixin:
     export_pdf.short_description = 'דו"ח מעוצב'
 
 
+# def to_pdf(template_src, context_dict={}):
+#     template = get_template(template_src)
+#     html = template.render(context_dict)
+#     result = BytesIO()
+#
+#     # This part will create the pdf.
+#     pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
+#     if not pdf.err:
+#         return HttpResponse(result.getvalue(), content_type='application/pdf')
+#     return None
+
+
+class ExportPdfMixin2:
+    def render_to_pdf(self, request, queryset):
+        return render(request, 'inventory/test.html')
+        # to_pdf("'inventory/test.html'")
+    render_to_pdf.short_description = 'דו"ח מעוצב2'
+
+
 class ExportCsvMixin:
     def export_as_csv(self, request, queryset):
         # google this - pandas index not showing up in csv file when using to_csv
@@ -140,18 +180,39 @@ class ExportCsvMixin:
         # df.to_csv(response, index=False)
         # return response
 
-        meta = self.model._meta
-        field_names = [field.name for field in meta.fields]
+        # meta = self.model._meta
+        # field_names = [field.name for field in meta.fields]
+        #
+        # response = HttpResponse(content_type='text/csv')
+        # response['Content-Disposition'] = 'attachment; filename=doch.csv'  # 'attachment; filename={}.xlsx'.format(meta)
+        # writer = csv.writer(response, encoding="utf8")   # https://answers.microsoft.com/en-us/msoffice/forum/all/how-to-open-csv-file-of-hebrew-language/8963c913-fb3d-4f22-866e-d373366ba196
+        # writer.writerow(field_names)
+        # for obj in queryset:
+        #     row = writer.writerow([getattr(obj, field) for field in field_names])
+        # return response
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=doch.csv'  # 'attachment; filename={}.xlsx'.format(meta)
-        writer = csv.writer(response, encoding="utf8")   # https://answers.microsoft.com/en-us/msoffice/forum/all/how-to-open-csv-file-of-hebrew-language/8963c913-fb3d-4f22-866e-d373366ba196
-        writer.writerow(field_names)
-        for obj in queryset:
-            row = writer.writerow([getattr(obj, field) for field in field_names])
-        return response
+        # cars = {'Brand': ['Honda Civic', 'Toyota Corolla', 'Ford Focus', 'Audi A4'],
+        #         'Price': [32000, 35000, 37000, 45000]
+        #         }
+        #
+        # df = pd.DataFrame(cars, columns=['Brand', 'Price'])
+        # response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # response['Content-Disposition'] = 'attachment; filename="filename.xlsx"'
+        # df.to_excel(response)
+        # return response
+
+        # return render(request, 'inventory/datatablesTest.html')
+        return render(request, 'inventory/excel.html')
+
+
 
     export_as_csv.short_description = 'דו"ח מלא'
+
+
+def excel(request):
+    object_list = Medication.objects.all()  # or any kind of queryset
+    json = serializers.serialize('json', object_list)
+    return HttpResponse(json, content_type='application/json')
 
 
 class MedicBookPageMixin:
@@ -187,75 +248,15 @@ class MedicSumMixin:
     export_sum.short_description = 'דו"ח כמות'
 
 
-# class OrderItemInline(admin.StackedInline):
-#     model = OrderItem
-#     extra = 1
-#
-#
-# class ItemAdmin(admin.ModelAdmin):
-#     date_hierarchy = 'date_added'
-#
-#     fieldsets = [
-#         (None, {'fields': ['name', 'chem_formula', 'category']}),
-#         ('Vendor Information', {'fields': ['vendor', 'catalog', 'manufacturer',
-#                                            'manufacturer_number',
-#                                            'size', 'unit',]}),
-#         (None, {'fields': ['parent_item', 'comments']})
-#     ]
-#
-#     list_display = ('name', 'category', 'date_added',)
-#     list_filter = ('category', 'vendor', 'manufacturer', 'date_added')
-#     search_fields = ('name', 'chem_formula', 'manufacturer_number', 'comments')
-#     inlines = (OrderItemInline,)
-#     # actions = ["export_as_csv"]
-
-
-# admin.site.register(Item, ItemAdmin)
-
-# for import or export
-# https://simpleisbetterthancomplex.com/packages/2016/08/11/django-import-export.html
-# @admin.register(Person)
-# class PersonAdmin(ImportExportModelAdmin):
-#     pass
-
-class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin, MedicBookPageMixin, MedicSumMixin):
+class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin, ExportPdfMixin2, MedicBookPageMixin, MedicSumMixin, ExportHTMLMixin):
     date_hierarchy = 'date_added'
 
     list_filter = ('kind_name', 'manufacturer', 'date_added', 'formation')
     search_fields = ('name', 'manufacturer', 'formation')
-    actions = ["export_as_csv", "export_pdf", "export_page_num", "export_sum"]
+    actions = ["export_as_csv", "export_pdf", "render_to_pdf", "export_page_num", "export_sum", "export_html"]
 
 
 admin.site.register(Medication, MedicineAdmin)
-
-# class OrderAdmin(admin.ModelAdmin):
-#     date_hierarchy = 'order_date'
-#     fields = ('name', 'order_date', 'ordered_by', 'ordered', 'ptao',)
-#     list_display = ('name', 'item_count', 'order_date', 'ordered', 'ptao')
-#     list_filter = ('ordered', 'ptao', 'ordered_by')
-#     search_fields = ('name',)
-#     inlines = (OrderItemInline,)
-#
-# admin.site.register(Order, OrderAdmin)
-#
-# class OrderItemAdmin(admin.ModelAdmin):
-#     date_hierarchy = 'date_arrived'
-#     fields = ('units_purchased', 'cost', 'date_arrived', 'serial', 'uva_equip',
-#               'location', 'expiry_years', 'reconciled')
-#     list_display = ('name', 'order_date', 'date_arrived', 'total_price', 'location')
-#     list_filter = ('item__name', 'order__order_date', 'date_arrived', 'location')
-#
-# admin.site.register(OrderItem, OrderItemAdmin)
-#
-# class PTAOAdmin(admin.ModelAdmin):
-#     fields = ('code', 'description', 'expires')
-#     list_display = fields + ('active',)
-#
-#
-# admin.site.register(PTAO, PTAOAdmin)
-#
-# for model in (Category, Unit, Manufacturer, Vendor):
-#     admin.site.register(model)
 
 
 for model in (Formation, Categorical_dose, Type, Company, Manufacturer, Manufacturing_country):

@@ -161,6 +161,10 @@ class Medication(models.Model):
     def __str__(self):
         return self.kind_name
 
+    @property
+    def formation_name(self):
+        return self.formation.name
+
     def mfg_url(self):
         try:
             return self.manufacturer.lookup_url
@@ -169,7 +173,6 @@ class Medication(models.Model):
 
     def get_absolute_url(self):
         return reverse("inventory:item", kwargs={'pk': self.pk})
-
 
 
 class Category(models.Model):
