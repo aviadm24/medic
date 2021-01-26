@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.contrib import admin
 from django.shortcuts import get_object_or_404, render, redirect
 from import_export.admin import ImportExportModelAdmin
+from .resources import MedicationResource
 from django.core.files.storage import FileSystemStorage
 from django.template.loader import render_to_string
 from django.core import serializers
@@ -31,34 +32,44 @@ def make_cat_dict():
     categorical_doses = Categorical_dose.objects.all()
     types = Type.objects.all()
     # kind_names = Kind_name.objects.all()
+    medicationsWithAmountGteZero = Medication.objects.filter(amount__gte=0)
+    # print(medicationsWithAmountGteZero)
     form_dict = {}
     for form in formations_queryset:
-        print(form.name)
+        form_list = []
+        print("form: ", form)
         # formations_in_inventory = Medication.objects.filter(formation__in=formations_queryset)
-        formation_query = Medication.objects.filter(formation=form)
+        # formation_query = Medication.objects.filter(formation=form)
+        formation_query = medicationsWithAmountGteZero.filter(formation=form)
         cat_dict = {}
         for category in categorical_doses:
-            elem_list = []
-            print(category.name)
+            cat_list = []
+            print("\tcategory: ", category.name)
             category_query = formation_query.filter(categorical_dose=category)
-            # print(category_query)
-            # type_list = []
-            type_dict = {}
+
             for m_type in types:
+
+                print("\t\tm_type: ", m_type)
                 type_query = category_query.filter(m_type=m_type)
-                # print(type_query)
                 for elem in type_query:
-                    # print("price: ", elem.price)
-                    # type_list.append({"type": m_type.name,
-                    #                   "kind": elem.kind_name,
-                    #                   "price": elem.price})
-                    type_dict = {"type": m_type.name,
-                                  "kind": elem.kind_name,
-                                  "price": elem.price}
+                    type_dict = {}
+                    if elem.amount > 0:
+                        print("\t\t\t", elem.kind_name)
+                        # print(form, " - ", category, " - ", m_type.name, " - ", elem.kind_name, ":", elem.price)
+                        type_dict = {"type": elem.m_type,
+                                     "kind": elem.kind_name,
+                                     "price": elem.price}
                     # type_list.append("{} - {} - {}".format(m_type.name, elem.kind_name, elem.price))
-            cat_dict[category.name] = type_dict
-            print(type_dict)
-        form_dict[form] = cat_dict
+                    if type_dict != {}:
+                        print("typedict: ", type_dict)
+                        cat_list.append(type_dict)
+            if cat_list:
+                print("cat_list: ", cat_list)
+                cat_dict[category] = cat_list
+            # form_list.append(cat_dict)
+        if cat_dict:
+            print("cat_dict: ", cat_dict)
+            form_dict[form] = cat_dict
     return form_dict
 
 
@@ -98,6 +109,8 @@ def sum_dict():
 class ExportHTMLMixin:
     def export_html(self, request, queryset):
         form_dict = make_cat_dict()
+        for form in form_dict.values():
+            print("form: ", form)
         return render(request, 'pdf_template.html', {'form_dict': form_dict})
         # html_string = render_to_string('test_template.html', {'form_dict': form_dict})
         #
@@ -261,7 +274,11 @@ class MedicineAdmin(admin.ModelAdmin, ExportCsvMixin, ExportPdfMixin, ExportPdfM
     actions = ["export_as_csv", "export_pdf", "render_to_pdf", "export_page_num", "export_sum", "export_html"]
 
 
-admin.site.register(Medication, MedicineAdmin)
+class MedicationResourceAdmin(MedicineAdmin, ImportExportModelAdmin):  # https://stackoverflow.com/questions/42597020/how-to-combine-two-or-more-modeladmins-in-django-admin
+    resource_class = MedicationResource
+
+
+admin.site.register(Medication, MedicationResourceAdmin)
 
 
 for model in (Formation, Categorical_dose, Type, Company, Manufacturer, Manufacturing_country):
